@@ -1,12 +1,10 @@
 version: "3.8"
 
-# Including necessary compose files for different services
 include:
   - nginx-compose.yaml
   - simple-login-compose.yaml
   - postfix-compose.yaml
 
-# Networks configuration
 networks:
   default:
     driver: bridge

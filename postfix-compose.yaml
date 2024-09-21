@@ -1,7 +1,6 @@
 version: "3.8"
 
 services:
-
   ## POSTFIX
   ## =================
 
@@ -14,32 +13,12 @@ services:
     env_file: .env
     environment:
       MAIL_CONFIG: /etc/postfix/conf.d/
-      - DOMAIN=${DOMAIN}
-      - SUBDOMAIN=${SUBDOMAIN:-app}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    entrypoint: >
-      /bin/sh -c "
-      if [ ! -f /etc/postfix/virtual ]; then
-        sed -e \"s/domain.tld/${DOMAIN}/g\" /etc/postfix/conf.d/virtual.tpl > /etc/postfix/conf.d/virtual;
-      fi &&
-      if [ ! -f /etc/postfix/virtual-regexp ]; then
-        sed -e \"s/domain.tld/${DOMAIN}/g\" /etc/postfix/conf.d/virtual-regexp.tpl > /etc/postfix/conf.d/virtual-regexp;
-      fi &&
-      sed -e \"s/myuser/${POSTGRES_USER}/g\" /etc/postfix/conf.d/pgsql-relay-domains.cf.tpl > /etc/postfix/conf.d/pgsql-relay-domains.cf &&
-      sed -i -e \"s/mypassword/$(echo ${POSTGRES_PASSWORD} | sed 's/[][\/\.|$(){}?+*^]/\\\\&/g')/g\" /etc/postfix/conf.d/pgsql-relay-domains.cf &&
-      sed -i -e \"s/domain.tld/${DOMAIN}/g\" /etc/postfix/conf.d/pgsql-relay-domains.cf &&
-      sed -e \"s/myuser/${POSTGRES_USER}/g\" /etc/postfix/conf.d/pgsql-transport-maps.cf.tpl > /etc/postfix/conf.d/pgsql-transport-maps.cf &&
-      sed -i -e \"s/mypassword/$(echo ${POSTGRES_PASSWORD} | sed 's/[][\/\.|$(){}?+*^]/\\\\&/g')/g\" /etc/postfix/conf.d/pgsql-transport-maps.cf &&
-      sed -i -e \"s/domain.tld/${DOMAIN}/g\" /etc/postfix/conf.d/pgsql-transport-maps.cf &&
-      exec postfix start-fg"
     ports:
-      - '25:25'
-      - '587:587'
+      - "25:25"
+      - "587:587"
     volumes:
       - ./postfix/conf.d/:/etc/postfix/conf.d:rw
       - ./acme.sh/conf.d/:/etc/acme.sh/:ro
     restart: unless-stopped
     depends_on:
       - email
-
