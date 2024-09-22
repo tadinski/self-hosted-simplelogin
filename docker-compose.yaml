@@ -1,9 +1,68 @@
 version: "3.8"
 
-include:
-  - nginx-compose.yaml
-  - simple-login-compose.yaml
-  - postfix-compose.yaml
+services:
+  ## POSTFIX
+  ## =================
+  postfix:
+    image: private/postfix:latest
+    build:
+      context: ./postfix/Dockerfiles/
+      dockerfile: Dockerfile
+    container_name: postfix
+    env_file: .env
+    environment:
+      MAIL_CONFIG: /etc/postfix/conf.d/
+    ports:
+      - "25:25"
+      - "587:587"
+    volumes:
+      - ./postfix/conf.d/:/etc/postfix/conf.d:rw
+      - ./acme.sh/conf.d/:/etc/acme.sh/:ro
+    restart: unless-stopped
+    depends_on:
+      - email
+
+  ## NGINX & SSL CERTS
+  ## =================
+  nginx:
+    image: nginx:1.25.2
+    container_name: nginx
+    volumes:
+      - ./nginx/conf.d/:/etc/nginx/conf.d/:ro
+      - ./nginx/ssl/:/etc/nginx/ssl/:ro
+      - ./acme.sh/conf.d/:/etc/acme.sh/:ro
+      - ./acme.sh/www/:/var/www/:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: unless-stopped
+
+  acme.sh:
+    image: private/acme.sh:latest
+    build:
+      context: ./acme.sh/Dockerfiles/
+      dockerfile: Dockerfile
+    container_name: acme.sh
+    env_file: .env
+    volumes:
+      - ./acme.sh/www/:/var/www/:rw
+      - ./acme.sh/conf.d/:/root/.acme.sh/:rw
+      - ./nginx/conf.d/:/etc/nginx/conf.d/:rw
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - nginx
+
+  ## Simple Login (Assuming it's a separate service from the others)
+  ## =================
+  email:
+    image: simplelogin/email:latest
+    container_name: email
+    env_file: .env
+    volumes:
+      - ./simple-login/conf/:/etc/simple-login/:rw
+    depends_on:
+      - postfix
+    restart: unless-stopped
 
 networks:
   default:
