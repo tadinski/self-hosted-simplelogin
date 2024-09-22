@@ -122,7 +122,7 @@ services:
       - ./acme.sh/www/:/var/www/:ro
     ports:
       - "80:80"
-      - "443:4433"
+      - "4433:443"
     restart: unless-stopped
 
   acme.sh:
