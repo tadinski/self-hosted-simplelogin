@@ -19,8 +19,6 @@ services:
       - ./postfix/conf.d/:/etc/postfix/conf.d:rw
       - ./acme.sh/conf.d/:/etc/acme.sh/:ro
     restart: unless-stopped
-    depends_on:
-      - email
 
   ## NGINX & SSL CERTS
   ## =================
